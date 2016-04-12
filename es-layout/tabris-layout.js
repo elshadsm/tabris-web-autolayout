@@ -12,7 +12,6 @@ var innerHeightVar = new cassowary.Variable({
 });
 solver = new cassowary.SimplexSolver();
 solver.autoSolve = false;
-
 var Box = cassowary.inherit({
   initialize: function (properties) {
     if (properties) {
@@ -242,7 +241,6 @@ function layoutBoxes(array) {
     box.layout();
   });
 }
-
 function addConstraint(constraint) {
   solver.addConstraint(constraint);
   _constraints.push(constraint);

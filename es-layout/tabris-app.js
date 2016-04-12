@@ -40,6 +40,6 @@ var boxFive = new Box({
 });
 var boxSix = new Box({
   layoutData: {left: 0, top: window.innerHeight - 50, width: window.innerWidth, height: 50},
-  background: "#119955"
+  background: "#11aa55"
 });
 layoutBoxes( [ boxOne, boxRightCorner, boxTwo, boxThreeOuter, boxThree, boxFour, boxFive, boxSix ] );
