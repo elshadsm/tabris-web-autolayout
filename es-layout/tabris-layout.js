@@ -27,8 +27,6 @@ var Box = cassowary.inherit({
     if (properties) {
       this._id = properties.id || "box" + new Date().getTime();
       this._child = [];
-      this._relation = [];
-      this._constraintsAdded = [];
       if (properties.parent) {
         properties.parent._child.push(this);
         this._parent = properties.parent;
@@ -77,48 +75,44 @@ var Box = cassowary.inherit({
   },
   topValue: function (top) {
     if (top instanceof Array) {
-      this._top = createValue("_top", cassowary.plus(top[0]._bottom.value, this.topValueResizeSize(this, top[1]).value));
-      this._relation.top = true;
+      this._top = createValue("_top", cassowary.plus(top[0]._bottom.value, this.verticalResize(this, top[1]).value));
     } else {
-      this._top = createValue("_top", top || -1);
+      this._top = createValue("_top", top ? this.verticalResize(this, top).value : -1);
     }
   },
   leftValue: function (left) {
     if (left instanceof Array) {
-      this._left = createValue("_left", cassowary.plus(left[0]._right.value, this.leftValueResizeSize(this, left[1]).value));
-      this._relation.left = true;
+      this._left = createValue("_left", cassowary.plus(left[0]._right.value, this.horizontalResize(this, left[1]).value));
     } else {
-      this._left = createValue("_left", left || -1);
+      this._left = createValue("_left", left ? this.horizontalResize(this, left).value : -1);
     }
   },
   widthValue: function (width) {
     if (width instanceof Array) {
-      this._width = createValue("_width", cassowary.plus(width[0].width.value, width[1]));
+      this._width = createValue("_width", cassowary.plus(width[0].width.value, this.horizontalResize(this, width[1]).value));
     } else {
-      this._width = createValue("_width", width || 0);
+      this._width = createValue("_width", width ? this.horizontalResize(this, width).value : 0);
     }
   },
   heightValue: function (height) {
     if (height instanceof Array) {
-      this._height = createValue("_height", cassowary.plus(height[0].height.value, height[1]));
+      this._height = createValue("_height", cassowary.plus(height[0].height.value, this.verticalResize(this, height[1]).value));
     } else {
-      this._height = createValue("_height", height || 0);
+      this._height = createValue("_height", height ? this.verticalResize(this, height).value : 0);
     }
   },
   bottomValue: function (bottom) {
     if (bottom instanceof Array) {
-      this._bottom = createValue("_bottom", cassowary.plus(bottom[0]._top.value, this.topValueResizeSize(this, bottom[1]).value));
-      this._relation.bottom = true;
+      this._bottom = createValue("_bottom", cassowary.plus(bottom[0]._top.value, this.verticalResize(this, bottom[1]).value));
     } else {
-      this._bottom = createValue("_bottom", bottom || 0);
+      this._bottom = createValue("_bottom", bottom == 0 ? window.innerHeight : bottom ? window.innerHeight - this.verticalResize(this, bottom).value : 0);
     }
   },
   rightValue: function (right) {
     if (right instanceof Array) {
-      this._right = createValue("_right", cassowary.plus(right[0]._left.value, this.leftValueResizeSize(this, right[1]).value));
-      this._relation.right = true;
+      this._right = createValue("_right", cassowary.plus(right[0]._left.value, this.horizontalResize(this, right[1]).value));
     } else {
-      this._right = createValue("_right", right || 0);
+      this._right = createValue("_right", right == 0 ? window.innerWidth : right ? window.innerWidth - this.horizontalResize(this, right).value : 0);
     }
   },
   centerXValue: function (centerX) {
@@ -141,23 +135,19 @@ var Box = cassowary.inherit({
   },
 
   constraints: function () {
-    this._callResize = true;
     this.centerXConstraints();
     this.centerYConstraints();
     this.topConstraints();
     this.leftConstraints();
     this.widthConstraints();
     this.heightConstraints();
-    this.resizeConstraints();
     this.bottomConstraints();
     this.rightConstraints();
   },
   centerXConstraints: function () {
     if (this.centerX || this.centerX == 0) {
-      this.resizeConstraints();
       if (this.parent) {
         if (this.parent.width > 0) {
-
           addConstraint(new cassowary.Equation(this._left, cassowary.minus(cassowary.divide(this.parent.width, 2),
             cassowary.minus(cassowary.divide(this._width.value, 2),
               this.centerX, cassowary.Strength.required, 1), cassowary.Strength.required, 1)));
@@ -173,10 +163,8 @@ var Box = cassowary.inherit({
   },
   centerYConstraints: function () {
     if (this.centerY || this.centerY == 0) {
-      this.resizeConstraints();
       if (this.parent) {
         if (this.parent.height > 0) {
-
           addConstraint(new cassowary.Equation(this._top, cassowary.minus(cassowary.divide(this.parent.height, 2),
             cassowary.minus(cassowary.divide(this._height.value, 2),
               this.centerY, cassowary.Strength.required, 1), cassowary.Strength.required, 1)));
@@ -215,7 +203,6 @@ var Box = cassowary.inherit({
       var widthConstraint = new cassowary.Equation(this._width,
         cassowary.minus(this._right.value, this._left.value));
       addConstraint(widthConstraint);
-      this._constraintsAdded.width = true;
     }
   },
   heightConstraints: function () {
@@ -223,14 +210,6 @@ var Box = cassowary.inherit({
       var heightConstraint = new cassowary.Equation(this._height,
         cassowary.minus(this._bottom.value, this._top.value), cassowary.Strength.required, 1);
       addConstraint(heightConstraint);
-      this._constraintsAdded.height = true;
-
-    }
-  },
-  resizeConstraints: function () {
-    if (this._callResize) {
-      this.resizeSize(this);
-      this._callResize = false;
     }
   },
   bottomConstraints: function () {
@@ -393,90 +372,14 @@ var Box = cassowary.inherit({
       element.appendChild(img);
     }
   },
-  resizeSize: function (object) {
-    var currentWidth = window.innerWidth;
-    var currentHeight = window.innerHeight;
-    var differenceHeight;
-    var differenceWidth;
-    if (object._width.value > 0) {
-      if (this._constraintsAdded.width) {
-        solver.addEditVar(object._width, c.Strength.medium, 501).beginEdit();
-        solver.suggestValue(object._width, c.times(object._width.value,
-          c.divide(currentWidth, screenWidthVariable.value)));
-        solver.resolve();
-        solver.endEdit();
-      } else {
-        addConstraint(new cassowary.Equation(object._width, c.times(object._width.value,
-          c.divide(currentWidth, screenWidthVariable.value))));
-      }
-    }
-    if (!this._relation.left && object._left.value > 0) {
-      addConstraint(new cassowary.Equation(object._left, c.times(object._left.value,
-        c.divide(currentWidth, screenWidthVariable.value))));
-    }
-
-    if ((screenHeightVariable.value > currentHeight && screenWidthVariable.value > currentWidth)) {
-      differenceHeight = screenHeightVariable.value - currentHeight;
-      differenceWidth = screenWidthVariable.value - currentWidth;
-      var difference = 0;
-      if (differenceHeight > differenceWidth) {
-        difference = differenceWidth;
-      } else {
-        difference = differenceHeight;
-      }
-      if (object._height.value > 0) {
-        if (this._constraintsAdded.height) {
-          solver.addEditVar(object._height, c.Strength.medium, 1).beginEdit();
-          solver.suggestValue(object._height, c.times(object._height.value,
-            c.divide(c.minus(screenHeightVariable.value, difference), screenHeightVariable.value)));
-          solver.resolve();
-          solver.endEdit();
-        } else {
-          addConstraint(new cassowary.Equation(object._height, c.times(object._height.value,
-            c.divide(c.minus(screenHeightVariable.value, difference), screenHeightVariable.value))));
-        }
-      }
-      if (!this._relation.top && object._top.value > 0) {
-        addConstraint(new cassowary.Equation(object._top, c.times(object._top.value,
-          c.divide(c.minus(screenHeightVariable.value, difference), screenHeightVariable.value))));
-      }
-
-    } else if (screenWidthVariable.value < currentHeight && screenWidthVariable.value < currentWidth) {
-      differenceHeight = currentHeight - screenHeightVariable.value;
-      differenceWidth = currentWidth - screenWidthVariable.value;
-      if (differenceHeight > differenceWidth) {
-        difference = differenceWidth;
-      } else {
-        difference = differenceHeight;
-      }
-      if (object._height.value > 0) {
-        if (this._constraintsAdded.height) {
-          solver.addEditVar(object._height, c.Strength.medium, 1).beginEdit();
-          solver.suggestValue(object._height, c.times(object._height.value,
-            c.divide(c.plus(screenHeightVariable.value, difference), screenHeightVariable.value)));
-          solver.resolve();
-          solver.endEdit();
-        } else {
-          addConstraint(new cassowary.Equation(object._height, c.times(object._height.value,
-            c.divide(c.plus(screenHeightVariable.value, difference), screenHeightVariable.value))));
-
-        }
-      }
-      if (!this._relation.top && object._top.value > 0) {
-        addConstraint(new cassowary.Equation(object._top, c.times(object._top.value,
-          c.divide(c.plus(screenHeightVariable.value, difference), screenHeightVariable.value))));
-      }
-    }
-
-  },
-  leftValueResizeSize: function (object, value) {
+  horizontalResize: function (object, value) {
     var currentWidth = window.innerWidth;
     return new cassowary.Variable({
       value: c.times(value,
         c.divide(currentWidth, screenWidthVariable.value))
     });
   },
-  topValueResizeSize: function (object, value) {
+  verticalResize: function (object, value) {
     var currentWidth = window.innerWidth;
     var currentHeight = window.innerHeight;
     var differenceHeight;
