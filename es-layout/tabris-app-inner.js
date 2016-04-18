@@ -17,7 +17,7 @@ var boxOneRightTop = new Box({
   id: "boxOneRightTop",
   text: "Hello I am moon",
   parent: backgroundBox,
-  layoutData: {left: [boxOne, 10] , bottom: [boxOne, -10],  width: 100, height: 100},
+  layoutData: {left: ["#boxOne", 10] , bottom: ["#boxOne", -10],  width: 100, height: 100},
   background: "red"
 });
 
@@ -25,7 +25,7 @@ var boxOneLeftBottom = new Box({
   id: "boxOneLeftBottom",
   text: "Hello I am star",
   parent: backgroundBox,
-  layoutData: {right: [boxOne, -10] , top: [boxOne, 10],  width: 100, height: 100},
+  layoutData: {right: ["#boxOne", -10] , top: ["#boxOne", 10],  width: 100, height: 100},
   background: "green"
 });
 

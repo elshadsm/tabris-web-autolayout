@@ -10,7 +10,7 @@ var boxText = new Box({
 
 var boxSix = new Box({
   id: "sixBox",
-  layoutData: {left: 0, top: 200, width: window.innerWidth, height: 400},
+  layoutData: {left: 0, top: 200, width: "100%", height: 400},
   background: "#119955"
 });
 
@@ -22,7 +22,7 @@ var boxSeven = new Box({
 });
 
 var boxSevenInner = new Box({
-  id: "sevenInnerBox",
+  id: "boxSevenInner",
   parent: boxSeven,
   text: "Hello I am red box",
   layoutData: {top: 20, left: 10, width: 150, height: 150},
@@ -31,18 +31,18 @@ var boxSevenInner = new Box({
 
 
 var boxSevenInnerTop = new Box({
-  id: "sevenInnerBoxBottom",
+  id: "boxSevenInnerTop",
   parent: boxSeven,
   text: "green",
-  layoutData: {left: [boxSevenInner, 0], top: 20, width: 50, height: 50},
+  layoutData: {left: ["#boxSevenInner", 0], top: 20, width: 50, height: 50},
   background: "green"
 });
 
 var boxSevenInnerBottom = new Box({
   id: "sevenInnerBoxBottom",
   parent: boxSeven,
-  layoutData: {left: [boxSevenInner, 0], top: [boxSevenInnerTop, 0], width: 50, height: 50},
+  layoutData: {left: ["#boxSevenInner", 0], top: ["#boxSevenInnerTop", 0], width: 50, height: 50},
   background: "blue"
 });
 
-layoutBoxes( [ boxText, boxSix, boxSeven, boxSevenInner, boxSevenInnerTop, boxSevenInnerBottom ] );
+layoutBoxes( [ boxText, boxSix, boxSeven, boxSevenInner, boxSevenInnerTop ] );
