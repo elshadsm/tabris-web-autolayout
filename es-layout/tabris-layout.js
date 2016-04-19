@@ -12,7 +12,6 @@ var screenWidthVariable = new cassowary.Variable({
 var screenHeightVariable = new cassowary.Variable({
   value: screen.height - (screen.height - window.outerHeight) - (window.outerHeight - window.innerHeight)
 });
-
 var innerWidthVariable = new cassowary.Variable({
   value: window.innerWidth
 });
@@ -21,7 +20,6 @@ var innerHeightVariable = new cassowary.Variable({
 });
 solver = new cassowary.SimplexSolver();
 solver.autoSolve = false;
-
 var Box = cassowary.inherit({
   initialize: function (properties) {
     if (properties) {
@@ -84,11 +82,6 @@ var Box = cassowary.inherit({
     } else {
       this._top = createValue("_top", -1);
     }
-    //if (top instanceof Array) {
-    //  this._top = createValue("_top", cassowary.plus(top[0]._bottom.value, this.verticalResize(this, top[1]).value));
-    //} else {
-    //  this._top = createValue("_top", top ? this.verticalResize(this, top).value : -1);
-    //}
   },
   leftValue: function (left) {
     if (left) {
@@ -96,11 +89,6 @@ var Box = cassowary.inherit({
     } else {
       this._left = createValue("_left", -1);
     }
-    //if (left instanceof Array) {
-    //  this._left = createValue("_left", cassowary.plus(left[0]._right.value, this.horizontalResize(this, left[1]).value));
-    //} else {
-    //  this._left = createValue("_left", left ? this.horizontalResize(this, left).value : -1);
-    //}
   },
   widthValue: function (width) {
     if (width) {
@@ -108,12 +96,6 @@ var Box = cassowary.inherit({
     } else {
       this._width = createValue("_width", 0);
     }
-
-    //if (width instanceof Array) {
-    //  this._width = createValue("_width", cassowary.plus(width[0].width.value, this.horizontalResize(this, width[1]).value));
-    //} else {
-    //  this._width = createValue("_width", width ? this.horizontalResize(this, width).value : 0);
-    //}
   },
   heightValue: function (height) {
     if (height) {
@@ -121,11 +103,6 @@ var Box = cassowary.inherit({
     } else {
       this._height = createValue("_height", 0);
     }
-    //if (height instanceof Array) {
-    //  this._height = createValue("_height", cassowary.plus(height[0].height.value, this.verticalResize(this, height[1]).value));
-    //} else {
-    //  this._height = createValue("_height", height ? this.verticalResize(this, height).value : 0);
-    //}
   },
   bottomValue: function (bottom) {
     if (bottom || bottom === 0) {
@@ -133,11 +110,6 @@ var Box = cassowary.inherit({
     } else {
       this._bottom = createValue("_bottom", 0);
     }
-    //if (bottom instanceof Array) {
-    //  this._bottom = createValue("_bottom", cassowary.plus(bottom[0]._top.value, this.verticalResize(this, bottom[1]).value));
-    //} else {
-    //  this._bottom = createValue("_bottom", bottom == 0 ? window.innerHeight : bottom ? window.innerHeight - this.verticalResize(this, bottom).value : 0);
-    //}
   },
   rightValue: function (right) {
     if (right || right === 0) {
@@ -145,11 +117,6 @@ var Box = cassowary.inherit({
     } else {
       this._right = createValue("_right", 0);
     }
-    //if (right instanceof Array) {
-    //  this._right = createValue("_right", cassowary.plus(right[0]._left.value, this.horizontalResize(this, right[1]).value));
-    //} else {
-    //  this._right = createValue("_right", right == 0 ? window.innerWidth : right ? window.innerWidth - this.horizontalResize(this, right).value : 0);
-    //}
   },
   centerXValue: function (centerX) {
     if (centerX) {
@@ -171,106 +138,121 @@ var Box = cassowary.inherit({
   },
 
   acceptValue: function (type, variable) {
-    var valueFirst = variable[0];
-    var valueSecond = variable[1];
-    var percentage;
-    var percentagePixels;
-    var boxId;
-    var box;
-
+    var result = [];
+    if (typeof variable === 'string' || variable instanceof String) {
+      variable = variable.trim();
+      result = variable.split(" ");
+    }
+    if (result.length > 1) {
+      variable = result;
+    }
     if (variable instanceof Array) {
-      if (typeof valueFirst === 'string' || valueFirst instanceof String) {
-        valueFirst = valueFirst.trim();
-        if (valueFirst.indexOf("%") > -1) {
-          percentage = valueFirst.substring(0, valueFirst.indexOf("%"));
-          if (type === '_top' || type === '_bottom' || type === '_height') {
-            percentagePixels = percentage * screenHeightVariable.value / 100;
-            percentagePixels = this.verticalResize(this, percentagePixels).value;
-            return createValue(type, cassowary.plus(percentagePixels, this.verticalResize(this, valueSecond).value));
-          } else {
-            percentagePixels = percentage * screenWidthVariable.value / 100;
-            percentagePixels = this.horizontalResize(this, percentagePixels).value;
-            return createValue(type, cassowary.plus(percentagePixels, this.horizontalResize(this, valueSecond).value));
-          }
-        } else if (valueFirst.indexOf("#") > -1) {
-
-          boxId = valueFirst.substring(valueFirst.indexOf("#") + 1);
-          box = getBoxById(boxId);
-
-          if (box != null) {
-            if (type === '_top') {
-              return createValue(type, cassowary.plus(box._bottom.value, this.verticalResizeFixed(this, valueSecond).value));
-            } else if (type === '_bottom') {
-              return createValue(type, cassowary.plus(box._top.value, this.verticalResizeFixed(this, valueSecond).value));
-
-            } else if (type === '_height') {
-              return createValue(type, cassowary.plus(box._height.value, this.verticalResizeFixed(this, valueSecond).value));
-
-            } else if (type === '_left') {
-              return createValue(type, cassowary.plus(box._right.value, this.horizontalResizeFixed(this, valueSecond).value));
-
-            } else if (type === '_right') {
-              return createValue(type, cassowary.plus(box._left.value, this.horizontalResizeFixed(this, valueSecond).value));
-
-            } else if (type === '_width') {
-              return createValue(type, cassowary.plus(box._width.value, this.horizontalResizeFixed(this, valueSecond).value));
-            }
-          } else {
-            return createValue(type, cassowary.plus(0, this.resizeSingleValue(type, valueSecond).value));
-          }
-        } else {
-          return createValue(type, cassowary.plus(parseInt(valueFirst), this.resizeSingleValue(type, valueSecond).value));
-        }
-      } else {
-        return createValue(type, cassowary.plus(valueFirst, this.resizeSingleValue(type, valueSecond).value));
-
-      }
-      //  //this._width = createValue("_width", cassowary.plus(width[0].width.value, this.horizontalResize(this, width[1]).value));
+      var valueFirst = variable[0];
+      var valueSecond = variable[1];
+      return this.acceptArrayValue(type, valueFirst, valueSecond);
     } else {
-      var value = variable;
-      if (typeof value === 'string' || value instanceof String) {
-        value = value.trim();
-        if (value.indexOf("%") > -1) {
-          percentage = value.substring(0, value.indexOf("%"));
-          if (type === '_top' || type === '_bottom' || type === '_height') {
-            percentagePixels = percentage * screenHeightVariable.value / 100;
-            percentagePixels = this.verticalResize(this, percentagePixels).value;
-          } else {
-            percentagePixels = percentage * screenWidthVariable.value / 100;
-            percentagePixels = this.horizontalResize(this, percentagePixels).value;
-          }
-          return createValue(type, percentagePixels);
-
-        } else if (value.indexOf("#") > -1) {
-
-          boxId = value.substring(value.indexOf("#") + 1);
-          box = getBoxById(boxId);
-
-          if (box != null) {
-            if (type === '_top') {
-              return createValue(type, box._bottom.value);
-            } else if (type === '_bottom') {
-              return createValue(type, box._top.value);
-            } else if (type === '_height') {
-              return createValue(type, box._height.value);
-            } else if (type === '_left') {
-              return createValue(type, box._right.value);
-            } else if (type === '_right') {
-              return createValue(type, box._left.value);
-            } else if (type === '_width') {
-              return createValue(type, box._width.value);
-            }
-          } else {
-            return createValue(type, 0);
-
-          }
-        } else {
-          value = parseInt(value);
-          return this.resizeValue(type, value);
-        }
+      return this.acceptSingleValue(type, variable);
+    }
+  },
+  acceptSingleValue: function (type, value) {
+    if (typeof value === 'string' || value instanceof String) {
+      value = value.trim();
+      if (value.indexOf("%") > -1) {
+        return this.acceptPercentageSingleValue(type, value);
+      } else if (value.indexOf("#") > -1) {
+        return this.acceptReferenceSingleValue(type, value);
       } else {
+        value = parseInt(value);
         return this.resizeValue(type, value);
       }
+    } else {
+      return this.resizeValue(type, value);
+    }
+  },
+  acceptPercentageSingleValue: function (type, value) {
+    var percentage = value.substring(0, value.indexOf("%"));
+    if (type === '_top' || type === '_bottom' || type === '_height') {
+      var percentagePixels = percentage * screenHeightVariable.value / 100;
+      percentagePixels = this.verticalResize(this, percentagePixels).value;
+    } else {
+      percentagePixels = percentage * screenWidthVariable.value / 100;
+      percentagePixels = this.horizontalResize(this, percentagePixels).value;
+    }
+    return createValue(type, percentagePixels);
+  },
+  acceptReferenceSingleValue: function (type, value) {
+    var boxId = value.substring(value.indexOf("#") + 1);
+    var box = getBoxById(boxId);
+    if (box != null) {
+      if (type === '_top') {
+        return createValue(type, box._bottom.value);
+      } else if (type === '_bottom') {
+        return createValue(type, box._top.value);
+      } else if (type === '_height') {
+        return createValue(type, box._height.value);
+      } else if (type === '_left') {
+        return createValue(type, box._right.value);
+      } else if (type === '_right') {
+        return createValue(type, box._left.value);
+      } else if (type === '_width') {
+        return createValue(type, box._width.value);
+      }
+    } else {
+      return createValue(type, 0);
+    }
+  },
+  acceptArrayValue: function (type, valueFirst, valueSecond) {
+    if (typeof valueFirst === 'string' || valueFirst instanceof String) {
+      valueFirst = valueFirst.trim();
+      valueSecond = parseInt(valueSecond);
+      if (valueFirst.indexOf("%") > -1) {
+        return this.acceptPercentageArrayValue(type, valueFirst, valueSecond);
+      } else if (valueFirst.indexOf("#") > -1) {
+        return this.acceptReferenceArrayValue(type, valueFirst, valueSecond);
+      } else {
+        return createValue(type, cassowary.plus(parseInt(valueFirst), this.resizeSingleValue(type, valueSecond).value));
+      }
+    } else {
+      return createValue(type, cassowary.plus(valueFirst, this.resizeSingleValue(type, valueSecond).value));
+    }
+  },
+  acceptPercentageArrayValue: function (type, valueFirst, valueSecond) {
+    var percentage;
+    var percentagePixels;
+    percentage = valueFirst.substring(0, valueFirst.indexOf("%"));
+    if (type === '_top' || type === '_bottom' || type === '_height') {
+      percentagePixels = percentage * screenHeightVariable.value / 100;
+      percentagePixels = this.verticalResize(this, percentagePixels).value;
+      return createValue(type, cassowary.plus(percentagePixels, this.verticalResize(this, valueSecond).value));
+    } else {
+      percentagePixels = percentage * screenWidthVariable.value / 100;
+      percentagePixels = this.horizontalResize(this, percentagePixels).value;
+      return createValue(type, cassowary.plus(percentagePixels, this.horizontalResize(this, valueSecond).value));
+    }
+  },
+  acceptReferenceArrayValue: function (type, valueFirst, valueSecond) {
+    var boxId = valueFirst.substring(valueFirst.indexOf("#") + 1);
+    var box = getBoxById(boxId);
+    if (box != null) {
+      if (type === '_top') {
+        return createValue(type, cassowary.plus(box._bottom.value, this.verticalResizeFixed(this, valueSecond).value));
+      } else if (type === '_bottom') {
+        return createValue(type, cassowary.plus(box._top.value, this.verticalResizeFixed(this, valueSecond).value));
+
+      } else if (type === '_height') {
+        return createValue(type, cassowary.plus(box._height.value, this.verticalResizeFixed(this, valueSecond).value));
+
+      } else if (type === '_left') {
+        return createValue(type, cassowary.plus(box._right.value, this.horizontalResizeFixed(this, valueSecond).value));
+
+      } else if (type === '_right') {
+        return createValue(type, cassowary.plus(box._left.value, this.horizontalResizeFixed(this, valueSecond).value));
+
+      } else if (type === '_width') {
+        return createValue(type, cassowary.plus(box._width.value, this.horizontalResizeFixed(this, valueSecond).value));
+      }
+    } else {
+      return createValue(type, cassowary.plus(0, this.resizeSingleValue(type, valueSecond).value));
     }
   },
   resizeValue: function (type, value) {
@@ -297,7 +279,6 @@ var Box = cassowary.inherit({
       return this.horizontalResize(this, value);
     }
   },
-
   constraints: function () {
     this.centerXConstraints();
     this.centerYConstraints();
@@ -390,6 +371,233 @@ var Box = cassowary.inherit({
       addConstraint(rightConstraint);
     }
   },
+  layout: function () {
+    if (!this.isChild) {
+      this._element = document.createElement('div');
+      this._element.className = 'box';
+      var self = this;
+      this.child.forEach(function (childObject, idx) {
+        self._element.appendChild(self.childLayout(childObject));
+      });
+      this._element.style.background = this.background;
+      this._element.style.position = "absolute";
+      this._element.style.top = this.top + "px";
+      this._element.style.left = this.left + "px";
+      this.boxContent(this._element, this.data);
+      this.computeSize(this._element, this);
+      document.body.appendChild(this._element);
+    }
+  },
+  childLayout: function (child) {
+    var child_element = document.createElement('div');
+    child_element.className = 'child-box';
+    var self = this;
+    child.child.forEach(function (childObject, idx) {
+      child_element.appendChild(self.childLayout(childObject));
+    });
+    child_element.style.background = child.background;
+    child_element.style.position = "absolute";
+    child_element.style.top = child.top + "px";
+    child_element.style.left = child.left + "px";
+    this.boxContent(child_element, child.data);
+    this.computeSize(child_element, child);
+    return child_element;
+  },
+  computeSize: function (element, object) {
+    this.computeWidthSize(element, object);
+    this.computeHeightSize(element, object);
+  },
+  computeHeightSize: function (element, object) {
+    if (object.height > 0) {
+      element.style.height = object.height + "px";
+      element.style.overflowY = "hidden";
+    } else {
+      var maxHeight = this.childMaxSizeHeight(object);
+      if (maxHeight > 0 && maxHeight > object.height) {
+        object._height.value = maxHeight;
+        element.style.height = object.height + "px";
+      } else {
+        element.style.height = "auto";
+      }
+    }
+  },
+  computeWidthSize: function (element, object) {
+    if (object.width > 0) {
+      element.style.width = object.width + "px";
+      element.style.overflowX = "hidden";
+      element.style.wordWrap = "break-word";
+    } else {
+      var maxRight = this.childMaxSizeWidth(object);
+      if (maxRight > 0 && maxRight > object.width) {
+        object._width.value = maxRight;
+        element.style.width = object.width + "px";
+      } else {
+        element.style.width = "auto";
+      }
+    }
+  },
+  childMaxSizeWidth: function (element) {
+    var maxRight = -1;
+    element.child.forEach(function (childObject, idx) {
+      if (maxRight < childObject.right) {
+        maxRight = childObject.right;
+      }
+    });
+    return maxRight;
+  },
+  childMaxSizeHeight: function (element) {
+    var maxBottom = -1;
+    element.child.forEach(function (childObject, idx) {
+      if (maxBottom < childObject.bottom) {
+        maxBottom = childObject.bottom;
+      }
+    });
+    return maxBottom;
+  },
+  boxContent: function (element, data) {
+    element.style.textAlign = "center";
+    element.style.color = "black";
+    if (data.font) {
+      element.style.font = data.font;
+    }
+    if (data.text) {
+      element.innerHTML = element.innerHTML + data.text;
+    } else if (data.img) {
+      var img = document.createElement("img");
+      img.src = data.img;
+      element.appendChild(img);
+    }
+  },
+  horizontalResizeFixed: function (object, value) {
+    var currentWidth = window.innerWidth;
+    var currentHeight = window.innerHeight;
+    if ((screenHeightVariable.value > currentHeight && screenWidthVariable.value > currentWidth)) {
+      return this.horizontalDecreaseResizeFixed(value, currentHeight, currentWidth);
+    } else if (screenWidthVariable.value < currentHeight && screenWidthVariable.value < currentWidth) {
+      return this.horizontalIncreaseResizeFixed(value, currentHeight, currentWidth);
+    }
+    return new cassowary.Variable({value: value});
+  },
+  horizontalDecreaseResizeFixed: function (value, currentHeight, currentWidth) {
+    var differenceHeight = screenHeightVariable.value - currentHeight;
+    var differenceWidth = screenWidthVariable.value - currentWidth;
+    var difference = 0;
+    if (differenceHeight > differenceWidth) {
+      difference = differenceWidth;
+    } else {
+      difference = differenceHeight;
+    }
+    return new cassowary.Variable({
+      value: c.times(value,
+        c.divide(c.minus(screenWidthVariable.value, difference), screenWidthVariable.value))
+    });
+  },
+  horizontalIncreaseResizeFixed: function (value, currentHeight, currentWidth) {
+    var differenceHeight = currentHeight - screenHeightVariable.value;
+    var differenceWidth = currentWidth - screenWidthVariable.value;
+    var difference = 0;
+    if (differenceHeight > differenceWidth) {
+      difference = differenceWidth;
+    } else {
+      difference = differenceHeight;
+    }
+    return new cassowary.Variable({
+      value: c.times(value,
+        c.divide(c.plus(screenWidthVariable.value, difference), screenWidthVariable.value))
+    });
+  },
+  horizontalResize: function (object, value) {
+    var currentWidth = window.innerWidth;
+    return new cassowary.Variable({
+      value: c.times(value,
+        c.divide(currentWidth, screenWidthVariable.value))
+    });
+  },
+  verticalResizeFixed: function (object, value) {
+    var currentWidth = window.innerWidth;
+    var currentHeight = window.innerHeight;
+    if (( screenHeightVariable.value > currentHeight && screenWidthVariable.value > currentWidth )) {
+      return this.verticalDecreaseResizeFixed(value, currentHeight, currentWidth);
+    } else if (screenWidthVariable.value < currentHeight && screenWidthVariable.value < currentWidth) {
+      return this.verticalIncreaseResizeFixed(value, currentHeight, currentWidth);
+    }
+    return new cassowary.Variable({value: value});
+  },
+  verticalDecreaseResizeFixed: function (value, currentHeight, currentWidth) {
+    var differenceHeight = screenHeightVariable.value - currentHeight;
+    var differenceWidth = screenWidthVariable.value - currentWidth;
+    var difference = 0;
+    if (differenceHeight > differenceWidth) {
+      difference = differenceWidth;
+    } else {
+      difference = differenceHeight;
+    }
+    return new cassowary.Variable({
+      value: c.times(value,
+        c.divide(c.minus(screenHeightVariable.value, difference), screenHeightVariable.value))
+    });
+  },
+  verticalIncreaseResizeFixed: function (value, currentHeight, currentWidth) {
+    var differenceHeight = currentHeight - screenHeightVariable.value;
+    var differenceWidth = currentWidth - screenWidthVariable.value;
+    var difference = 0;
+    if (differenceHeight > differenceWidth) {
+      difference = differenceWidth;
+    } else {
+      difference = differenceHeight;
+    }
+    return new cassowary.Variable({
+      value: c.times(value,
+        c.divide(c.plus(screenHeightVariable.value, difference), screenHeightVariable.value))
+    });
+  },
+  verticalResize: function (object, value) {
+    var currentHeight = window.innerHeight;
+    return new cassowary.Variable({
+      value: c.times(value,
+        c.divide(currentHeight, screenHeightVariable.value))
+    });
+  },
+  commonResize: function (object, value) {
+    var currentWidth = window.innerWidth;
+    var currentHeight = window.innerHeight;
+    if ((screenHeightVariable.value > currentHeight && screenWidthVariable.value > currentWidth)) {
+      return this.commonDecreaseResize(value, currentHeight, currentHeight);
+    } else if (screenWidthVariable.value < currentHeight && screenWidthVariable.value < currentWidth) {
+      return this.commonIncreaseResize(value, currentHeight, currentHeight);
+    }
+    return new cassowary.Variable({value: value});
+  },
+  commonDecreaseResize: function (value, currentHeight, currentWidth) {
+    var differenceHeight = screenHeightVariable.value - currentHeight;
+    var differenceWidth = screenWidthVariable.value - currentWidth;
+    if (differenceHeight > differenceWidth) {
+      return new cassowary.Variable({
+        value: c.times(value,
+          c.divide(c.minus(screenWidthVariable.value, differenceWidth), screenWidthVariable.value))
+      });
+    } else {
+      return new cassowary.Variable({
+        value: c.times(value,
+          c.divide(c.minus(screenHeightVariable.value, differenceHeight), screenHeightVariable.value))
+      });
+    }
+  },
+  commonIncreaseResize: function (value, currentHeight, currentWidth) {
+    var differenceHeight = currentHeight - screenHeightVariable.value;
+    var differenceWidth = currentWidth - screenWidthVariable.value;
+    if (differenceHeight > differenceWidth) {
+      return new cassowary.Variable({
+        value: c.times(value,
+          c.divide(c.plus(screenWidthVariable.value, differenceWidth), screenWidthVariable.value))
+      });
+    } else {
+      return new cassowary.Variable({
+        value: c.times(value,
+          c.divide(c.plus(screenHeightVariable.value, differenceHeight), screenHeightVariable.value))
+      });
+    }
+  },
   get id() {
     return this._id;
   },
@@ -446,218 +654,6 @@ var Box = cassowary.inherit({
       ", centerX: " + this.centerX + "" +
       ", centerY: " + this.centerY + " " +
       ", background: " + this.background + "}\n";
-  },
-  layout: function () {
-    if (!this.isChild) {
-      this._element = document.createElement('div');
-      this._element.className = 'box';
-      var self = this;
-      this.child.forEach(function (childObject, idx) {
-        self._element.appendChild(self.childLayout(childObject));
-      });
-      this._element.style.background = this.background;
-      this._element.style.position = "absolute";
-      this._element.style.top = this.top + "px";
-      this._element.style.left = this.left + "px";
-      this.boxContent(this._element, this.data);
-      this.computeSize(this._element, this);
-      document.body.appendChild(this._element);
-    }
-  },
-  childLayout: function (child) {
-    var _child_element = document.createElement('div');
-    _child_element.className = 'child-box';
-    var self = this;
-    child.child.forEach(function (childObject, idx) {
-      _child_element.appendChild(self.childLayout(childObject));
-    });
-    _child_element.style.background = child.background;
-    _child_element.style.position = "absolute";
-    _child_element.style.top = child.top + "px";
-    _child_element.style.left = child.left + "px";
-    this.boxContent(_child_element, child.data);
-    this.computeSize(_child_element, child);
-    return _child_element;
-  },
-  computeSize: function (element, object) {
-    if (object.width > 0) {
-      element.style.width = object.width + "px";
-      element.style.overflowX = "hidden";
-      element.style.wordWrap = "break-word";
-    } else {
-      var maxRight = this.childMaxSizeWidth(object);
-      if (maxRight > 0 && maxRight > object.width) {
-        object._width.value = maxRight;
-        element.style.width = object.width + "px";
-      } else {
-        element.style.width = "auto";
-      }
-    }
-    if (object.height > 0) {
-      element.style.height = object.height + "px";
-      element.style.overflowY = "hidden";
-
-    } else {
-      var maxHeight = this.childMaxSizeHeight(object);
-      if (maxHeight > 0 && maxHeight > object.height) {
-        object._height.value = maxHeight;
-        element.style.height = object.height + "px";
-      } else {
-        element.style.height = "auto";
-      }
-    }
-  },
-  childMaxSizeWidth: function (element) {
-    var maxRight = -1;
-    element.child.forEach(function (childObject, idx) {
-      if (maxRight < childObject.right) {
-        maxRight = childObject.right;
-      }
-    });
-    return maxRight;
-  },
-  childMaxSizeHeight: function (element) {
-    var maxBottom = -1;
-    element.child.forEach(function (childObject, idx) {
-      if (maxBottom < childObject.bottom) {
-        maxBottom = childObject.bottom;
-      }
-    });
-    return maxBottom;
-  },
-  boxContent: function (element, data) {
-    element.style.textAlign = "center";
-    element.style.color = "black";
-    if (data.font) {
-      element.style.font = data.font;
-    }
-    if (data.text) {
-      element.innerHTML = element.innerHTML + data.text;
-    } else if (data.img) {
-      var img = document.createElement("img");
-      img.src = data.img;
-      element.appendChild(img);
-    }
-  },
-  horizontalResizeFixed: function (object, value) {
-    var currentWidth = window.innerWidth;
-    var currentHeight = window.innerHeight;
-    var differenceHeight;
-    var differenceWidth;
-    if ((screenHeightVariable.value > currentHeight && screenWidthVariable.value > currentWidth)) {
-      differenceHeight = screenHeightVariable.value - currentHeight;
-      differenceWidth = screenWidthVariable.value - currentWidth;
-      var difference = 0;
-      if (differenceHeight > differenceWidth) {
-        difference = differenceWidth;
-      } else {
-        difference = differenceHeight;
-      }
-      return new cassowary.Variable({
-        value: c.times(value,
-          c.divide(c.minus(screenWidthVariable.value, difference), screenWidthVariable.value))
-      });
-    } else if (screenWidthVariable.value < currentHeight && screenWidthVariable.value < currentWidth) {
-      differenceHeight = currentHeight - screenHeightVariable.value;
-      differenceWidth = currentWidth - screenWidthVariable.value;
-      if (differenceHeight > differenceWidth) {
-        difference = differenceWidth;
-      } else {
-        difference = differenceHeight;
-      }
-      return new cassowary.Variable({
-        value: c.times(value,
-          c.divide(c.plus(screenWidthVariable.value, difference), screenWidthVariable.value))
-      });
-
-    }
-    return new cassowary.Variable({value: value});
-  },
-  horizontalResize: function (object, value) {
-    var currentWidth = window.innerWidth;
-    return new cassowary.Variable({
-      value: c.times(value,
-        c.divide(currentWidth, screenWidthVariable.value))
-    });
-  },
-  verticalResizeFixed: function (object, value) {
-    var currentWidth = window.innerWidth;
-    var currentHeight = window.innerHeight;
-    var differenceHeight;
-    var differenceWidth;
-    if ((screenHeightVariable.value > currentHeight && screenWidthVariable.value > currentWidth)) {
-      differenceHeight = screenHeightVariable.value - currentHeight;
-      differenceWidth = screenWidthVariable.value - currentWidth;
-      var difference = 0;
-      if (differenceHeight > differenceWidth) {
-        difference = differenceWidth;
-      } else {
-        difference = differenceHeight;
-      }
-      return new cassowary.Variable({
-        value: c.times(value,
-          c.divide(c.minus(screenHeightVariable.value, difference), screenHeightVariable.value))
-      });
-    } else if (screenWidthVariable.value < currentHeight && screenWidthVariable.value < currentWidth) {
-      differenceHeight = currentHeight - screenHeightVariable.value;
-      differenceWidth = currentWidth - screenWidthVariable.value;
-      if (differenceHeight > differenceWidth) {
-        difference = differenceWidth;
-      } else {
-        difference = differenceHeight;
-      }
-      return new cassowary.Variable({
-        value: c.times(value,
-          c.divide(c.plus(screenHeightVariable.value, difference), screenHeightVariable.value))
-      });
-
-    }
-    return new cassowary.Variable({value: value});
-  },
-  verticalResize: function (object, value) {
-    var currentHeight = window.innerHeight;
-    return new cassowary.Variable({
-      value: c.times(value,
-        c.divide(currentHeight, screenHeightVariable.value))
-    });
-  },
-  commonResize: function (object, value) {
-    var currentWidth = window.innerWidth;
-    var currentHeight = window.innerHeight;
-    var differenceHeight;
-    var differenceWidth;
-    if ((screenHeightVariable.value > currentHeight && screenWidthVariable.value > currentWidth)) {
-      differenceHeight = screenHeightVariable.value - currentHeight;
-      differenceWidth = screenWidthVariable.value - currentWidth;
-      if (differenceHeight > differenceWidth) {
-        return new cassowary.Variable({
-          value: c.times(value,
-            c.divide(c.minus(screenWidthVariable.value, differenceWidth), screenWidthVariable.value))
-        });
-
-      } else {
-        return new cassowary.Variable({
-          value: c.times(value,
-            c.divide(c.minus(screenHeightVariable.value, differenceHeight), screenHeightVariable.value))
-        });
-      }
-    } else if (screenWidthVariable.value < currentHeight && screenWidthVariable.value < currentWidth) {
-      differenceHeight = currentHeight - screenHeightVariable.value;
-      differenceWidth = currentWidth - screenWidthVariable.value;
-      if (differenceHeight > differenceWidth) {
-        return new cassowary.Variable({
-          value: c.times(value,
-            c.divide(c.plus(screenWidthVariable.value, differenceWidth), screenWidthVariable.value))
-        });
-
-      } else {
-        return new cassowary.Variable({
-          value: c.times(value,
-            c.divide(c.plus(screenHeightVariable.value, differenceHeight), screenHeightVariable.value))
-        });
-      }
-    }
-    return new cassowary.Variable({value: value});
   }
 });
 var createValue = function (n, val) {
@@ -668,13 +664,11 @@ var createValue = function (n, val) {
 };
 window.addEventListener("resize", function (event) {
   document.body.innerHTML = "";
-
   innerHeightVariable.value = window.innerHeight;
   innerWidthVariable.value = window.innerWidth;
   _boxes.forEach(function (box, idx) {
     box.prepareLayoutValues(box.layoutData);
   });
-
   _boxes.forEach(function (box, idx) {
     box.layout();
   });
@@ -689,13 +683,11 @@ var getBoxById = function (id) {
   });
   return result;
 };
-
 function layoutBoxes(array) {
   array.forEach(function (box, idx) {
     box.layout();
   });
 }
-
 function addConstraint(constraint) {
   solver.addConstraint(constraint);
   _constraints.push(constraint);

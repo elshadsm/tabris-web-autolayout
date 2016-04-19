@@ -4,7 +4,6 @@ var boxOne = new Box({
   layoutData: {left: 10, top: 10, width: 100, height: 100},
   background: "blue"
 });
-
 var boxRightCorner = new Box({
   id: "boxRightCorner",
   text: "I am right corner box",
@@ -23,7 +22,6 @@ var boxThree = new Box({
   layoutData: {centerX: 0, centerY: 0, width: 100, height: 100},
   background: "green"
 });
-
 var boxTwo = new Box({
   id: "boxTwo",
   layoutData: {
